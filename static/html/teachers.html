@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>老师信息</title>
+    <style>
+        #container {
+            width: 80%;
+            margin: 10px auto;
+        }
+        .teacher {
+            width: 100%;
+            margin: 0 auto;
+            padding: 10px 0;
+            border-bottom: 1px dashed gray;
+            overflow: auto;
+        }
+        .teacher>div {
+            float: left;
+        }
+        .photo {
+            height: 140px;
+            border-radius: 75px;
+            overflow: hidden;
+            margin-left: 20px;
+        }
+        .info {
+            width: 75%;
+            margin-left: 30px;
+        }
+        .info div {
+            clear: both;
+            margin: 5px 10px;
+        }
+        .info span {
+            margin-right: 25px;
+        }
+        a {
+            text-decoration: none;
+            color: darkcyan;
+        }
+    </style>
+</head>
+<body>
+    <div id="container" v-loading.fullscreen.lock="loading">
+        <h1>{{ subject.name }}学科的老师信息</h1>
+        <hr>
+        <h2 v-if="teachers.length == 0">暂无该学科老师信息</h2>
+        <div class="teacher" v-for="teacher in teachers">
+            <div class="photo">
+                <img :src="'/static/images/' + teacher.photo" height="140" alt="">
+            </div>
+            <div class="info">
+                <div>
+                    <span><strong>姓名：{{ teacher.name }}</strong></span>
+                    <span>性别：{{ teacher.sex | maleOrFemale }}</span>
+                    <span>出生日期：{{ teacher.birth }}</span>
+                </div>
+                <div class="intro">{{ teacher.intro }}</div>
+                <div class="comment">
+                    <a href="" @click.prevent="vote(teacher, true)">好评</a>&nbsp;&nbsp;
+                    (<strong>{{ teacher.good_count }}</strong>)
+                    &nbsp;&nbsp;&nbsp;&nbsp;
+                    <a href="" @click.prevent="vote(teacher, false)">差评</a>&nbsp;&nbsp;
+                    (<strong>{{ teacher.bad_count }}</strong>)
+                </div>
+            </div>
+        </div>
+        <a href="/">返回首页</a>
+    </div>
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/2.6.11/vue.min.js"></script>
+    <script>
+        let app = new Vue({
+            el: '#container',
+            data: {
+                subject: null,
+                teachers: [],
+                loading: true
+            },
+            created() {
+                fetch('/api/teachers/' + location.search)
+                    .then(resp => resp.json())
+                    .then(json => {
+                        this.loading = false
+                        this.subject = json.subject
+                        this.teachers = json.teachers
+                    })
+            },
+            filters: {
+                maleOrFemale(sex) {
+                    return sex? '男': '女'
+                }
+            },
+            methods: {
+                vote(teacher, isPraise) {
+                    let url = (isPraise? '/praise/?tno=' : '/criticize/?tno=') + teacher.no
+                    fetch(url, {
+                        headers: {
+                            "token": localStorage.token
+                        }
+                    })
+                        .then(resp => resp.json())
+                        .then(json => {
+                            if (json.code === 20000) {
+                                if (isPraise) {
+                                    teacher.good_count = json.count
+                                } else {
+                                    teacher.bad_count = json.count
+                                }
+                            } else {
+                                alert(json.mesg)
+                                if (json.code === 20002) {
+                                    location.href = '/static/html/login.html'
+                                }
+                            }
+                        })
+                }
+            }
+        })
+    </script>
+</body>
+</html>

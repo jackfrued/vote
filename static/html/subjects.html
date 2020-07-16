@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>学科信息</title>
+    <style>
+        #container {
+            width: 80%;
+            margin: 10px auto;
+        }
+        .user {
+            float: right;
+            margin-right: 10px;
+        }
+        .user>a {
+            margin-right: 10px;
+        }
+        #main>dl>dt {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+        #main>dl>dd {
+            font-size: 1.2em;
+        }
+        a {
+            text-decoration: none;
+            color: darkcyan;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div class="user">
+            <a v-if="!localStorage.token" href="/static/html/login.html">用户登录</a>
+            {{ username }}&nbsp;&nbsp;
+            <a v-if="!!localStorage.token" href="" @click.prevent="logout()">退出登录</a>
+            <a href="/static/html/register.html">快速注册</a>
+        </div>
+        <h1>扣丁学堂所有学科</h1>
+        <hr>
+        <div id="main" v-loading.fullscreen.lock="loading">
+            <dl v-for="subject in subjects">
+                <dt>
+                    <a :href="'/static/html/teachers.html?sno=' + subject.no">{{ subject.name }}</a>
+                    <img v-if="subject.is_hot" src="/static/images/hot-icon-small.png">
+                </dt>
+                <dd>{{ subject.intro }}</dd>
+            </dl>
+        </div>
+    </div>
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/2.6.11/vue.min.js"></script>
+    <script>
+        let app = new Vue({
+            el: '#container',
+            data: {
+                subjects: [],
+                loading: true,
+                username: localStorage.username
+            },
+            created() {
+                fetch('/api/subjects/')
+                    .then(resp => resp.json())
+                    .then(json => {
+                        this.loading = false
+                        this.subjects = json
+                    })
+            },
+            methods: {
+                logout() {
+                    delete localStorage.token
+                    delete localStorage.username
+                    this.username = ''
+                }
+            }
+        })
+    </script>
+</body>
+</html>

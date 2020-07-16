@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>用户登录</title>
+    <style>
+        #container {
+            width: 520px;
+            margin: 10px auto;
+        }
+        .input {
+            margin: 20px 0;
+            width: 460px;
+            height: 40px;
+        }
+        .input>label {
+            display: inline-block;
+            width: 140px;
+            text-align: right;
+        }
+        form+div {
+            margin-top: 20px;
+        }
+        form+div>a {
+            text-decoration: none;
+            color: darkcyan;
+            font-size: 1.2em;
+        }
+        .button {
+            width: 500px;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .hint {
+            color: red;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h1>用户登录</h1>
+        <hr>
+        <p class="hint">{{ hint }}</p>
+        <form action="" method="post">
+            <fieldset>
+                <legend>用户信息</legend>
+                <div class="input">
+                    <label>用户名：</label>
+                    <input type="text" v-model="username">
+                </div>
+                <div class="input">
+                    <label>密码：</label>
+                    <input type="password" v-model="password">
+                </div>
+            </fieldset>
+            <div class="button">
+                <input type="submit" value="登录" @click.prevent="login()">
+                <input type="reset" value="重置">
+            </div>
+        </form>
+        <div>
+            <a href="/">返回首页</a>
+            <a href="/static/html/register.html">注册新用户</a>
+        </div>
+    </div>
+     <script src="https://cdn.bootcdn.net/ajax/libs/vue/2.6.11/vue.min.js"></script>
+    <script>
+        let app = new Vue({
+            el: '#container',
+            data: {
+                hint: '',
+                username: '',
+                password: '',
+            },
+            methods: {
+                login() {
+                    fetch('/login/', {
+                        method: 'post',
+                        body: JSON.stringify({
+                            'username': this.username,
+                            'password': this.password
+                        }),
+                        headers: {'content-type': 'application/json'}
+                    }).then(resp => resp.json()).then(json => {
+                        if (json.code === 10000) {
+                            localStorage.token = json.token
+                            localStorage.username = json.username
+                            location.href = '/'
+                        } else {
+                            this.username = ''
+                            this.password = ''
+                            this.hint = json.mesg
+                        }
+                    })
+                }
+            }
+        })
+    </script>
+</body>
+</html>
